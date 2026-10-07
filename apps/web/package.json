@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@solidjs/web": "2.0.0-rc.13",
+    "effect": "^4.0.1",
     "solid-js": "2.0.0-rc.13"
   },
   "devDependencies": {
