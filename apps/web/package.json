@@ -4,5 +4,12 @@
   "private": true,
   "nx": {
     "name": "web"
+  },
+  "dependencies": {
+    "@solidjs/web": "2.0.0-rc.13",
+    "solid-js": "2.0.0-rc.13"
+  },
+  "devDependencies": {
+    "@solidjs/vite-plugin": "3.0.0-next.35"
   }
 }

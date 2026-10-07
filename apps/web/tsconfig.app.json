@@ -7,7 +7,9 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "outDir": "out-tsc/app",
-    "tsBuildInfoFile": "out-tsc/app/tsconfig.app.tsbuildinfo"
+    "tsBuildInfoFile": "out-tsc/app/tsconfig.app.tsbuildinfo",
+    "jsx": "preserve",
+    "jsxImportSource": "@solidjs/web"
   },
   "exclude": [
     "out-tsc",
@@ -25,5 +27,5 @@
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx"
   ],
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

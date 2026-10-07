@@ -1,5 +1,6 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
+import solid from '@solidjs/vite-plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -12,11 +13,7 @@ export default defineConfig(() => ({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [],
-  // },
+  plugins: [solid()],
   build: {
     outDir: './dist',
     emptyOutDir: true,
