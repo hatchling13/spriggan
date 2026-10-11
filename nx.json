@@ -67,5 +67,10 @@
       "unitTestRunner": "vitest",
       "e2eTestRunner": "none"
     }
+  },
+  "release": {
+    "version": {
+      "preVersionCommand": "pnpm nx run-many -t build"
+    }
   }
 }
