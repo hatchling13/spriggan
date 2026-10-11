@@ -1,0 +1,6 @@
+{
+  "id": "crlf-input",
+  "policies": ["INPUT-007", "LAYOUT-008"],
+  "mode": "json",
+  "outcome": "formatted"
+}

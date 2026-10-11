@@ -1,0 +1,6 @@
+{
+  "id": "trailing-line-comment",
+  "policies": ["INPUT-005", "COMMENT-002"],
+  "mode": "jsonc",
+  "outcome": "formatted"
+}

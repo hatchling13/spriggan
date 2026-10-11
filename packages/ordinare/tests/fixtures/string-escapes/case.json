@@ -1,0 +1,6 @@
+{
+  "id": "string-escapes",
+  "policies": ["PRESERVE-001", "PRESERVE-005"],
+  "mode": "json",
+  "outcome": "formatted"
+}

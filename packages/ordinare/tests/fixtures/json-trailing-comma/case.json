@@ -1,0 +1,6 @@
+{
+  "id": "json-trailing-comma",
+  "policies": ["INPUT-005", "ERROR-001"],
+  "mode": "json",
+  "outcome": "failure"
+}

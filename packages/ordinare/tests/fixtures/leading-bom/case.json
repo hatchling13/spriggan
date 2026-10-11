@@ -1,0 +1,6 @@
+{
+  "id": "leading-bom",
+  "policies": ["INPUT-006", "LAYOUT-007"],
+  "mode": "json",
+  "outcome": "formatted"
+}

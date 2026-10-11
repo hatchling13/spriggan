@@ -1,0 +1,6 @@
+{
+  "id": "large-number",
+  "policies": ["INPUT-002", "PRESERVE-001"],
+  "mode": "json",
+  "outcome": "formatted"
+}

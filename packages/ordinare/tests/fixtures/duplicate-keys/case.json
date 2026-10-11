@@ -1,0 +1,6 @@
+{
+  "id": "duplicate-keys",
+  "policies": ["PRESERVE-002"],
+  "mode": "json",
+  "outcome": "formatted"
+}

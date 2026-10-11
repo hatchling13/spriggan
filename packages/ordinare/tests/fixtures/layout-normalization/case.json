@@ -1,0 +1,6 @@
+{
+  "id": "layout-normalization",
+  "policies": ["LAYOUT-001", "LAYOUT-004", "COMMENT-001", "INPUT-005"],
+  "mode": "jsonc",
+  "outcome": "formatted"
+}

@@ -1,0 +1,6 @@
+{
+  "id": "comments-only",
+  "policies": ["INPUT-004", "ERROR-001"],
+  "mode": "jsonc",
+  "outcome": "failure"
+}

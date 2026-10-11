@@ -1,0 +1,6 @@
+{
+  "id": "whitespace-only",
+  "policies": ["INPUT-003"],
+  "mode": "json",
+  "outcome": "neutral"
+}
