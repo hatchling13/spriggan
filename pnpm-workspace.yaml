@@ -1,7 +1,7 @@
 packages:
-  - "packages/*"
-  - "apps/web"
+  - 'packages/*'
+  - 'apps/web'
 allowBuilds:
   nx: true
   esbuild: false
-  "@swc/core": false
+  '@swc/core': false
