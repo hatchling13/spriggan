@@ -9,7 +9,8 @@ JavaScript and declarations in `dist`.
 
 ## Design
 
-- [Policies and architecture contracts](docs/policies.md)
+- [Behavior policies](docs/policies.md)
+- [Public API and architecture contracts](docs/architecture.md)
 - [Behavior fixtures and remaining cases](tests/fixtures/README.md)
 
 ## Building

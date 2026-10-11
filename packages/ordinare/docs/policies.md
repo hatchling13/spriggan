@@ -1,8 +1,9 @@
 # Ordinare policies
 
 This document records the agreed behavior of the JSON/JSONC beautifier. Policy
-IDs are stable references for fixtures. Implementation details listed as deferred
-are not additional requirements or settled tool choices.
+IDs are stable references for fixtures. Public API and internal stage contracts
+live in [architecture.md](architecture.md). These documents specify behavior and
+guarantees without prescribing unselected implementation tools or algorithms.
 
 ## Scope
 
@@ -69,26 +70,11 @@ When behavior conflicts, use this priority:
 The goal is not byte-for-byte compatibility with all Oxfmt output. Capture any
 intentional differences in policy-linked fixtures.
 
-## Architecture contracts
+## Architecture
 
-```text
-Original JavaScript string
-  -> parser adapter
-  -> engine-owned syntax model
-  -> comment attachment
-  -> Doc construction
-  -> printer
-  -> formatted output
-```
-
-| ID       | Contract                                                                                                                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ARCH-001 | Initially use Microsoft's `jsonc-parser`, isolated behind an adapter. Its node types, error codes, callbacks, recovery state, and default options do not escape the adapter.                |
-| ARCH-002 | The engine-owned model retains the original source, tree structure, token and comment ranges, punctuation information, and relevant whitespace/blank-line information.                      |
-| ARCH-003 | Source ranges use UTF-16 code units, with an inclusive start and exclusive end. Convert other parser offset conventions in the adapter. Include any leading BOM in original-source offsets. |
-| ARCH-004 | Source positions and display-width measurement are separate concerns. A segmenter's character boundaries do not redefine the source-range contract.                                         |
-| ARCH-005 | Use Effect at the execution and error-handling boundary. Keep syntax conversion, comment processing, Doc construction, and printing pure and deterministic.                                 |
-| ARCH-006 | Parser replacement must preserve the public behavior and pass the same contract fixtures. A replacement must provide enough source information to satisfy preservation requirements.        |
+The public contract, internal invariants, parser isolation, and stage boundaries
+are defined in [architecture.md](architecture.md). Existing `ARCH-*` identifiers
+are retained there.
 
 ## Verification and fixture ownership
 
@@ -104,13 +90,9 @@ IDs rather than duplicating their payloads. Fixtures are the single source of tr
 for concrete expected outputs. The initial fixtures are behavior specifications,
 not evidence that the unimplemented engine passes them.
 
-## Deferred implementation choices
+## Remaining reference cases
 
-- Display-width algorithm, Unicode rules, and supporting library.
-- Concrete syntax model, parser interface, and Doc representation.
-- Effect error classes, exact diagnostic taxonomy, and diagnostic ordering.
-- Fixture loader and contract test harness.
-- Remaining one-line/multiline, comment-placement, and delimiter boundary cases.
-
-Choose these during implementation or by reviewing specific fixtures. Do not
-introduce additional product options solely to accommodate implementation details.
+Concrete wrapping and ambiguous comment placement still need expected-output
+fixtures. See the [fixture backlog](../tests/fixtures/README.md#cases-to-settle-or-add).
+Implementation choices are listed separately in
+[architecture.md](architecture.md#deferred-implementation-choices).
