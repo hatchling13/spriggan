@@ -1,7 +1,7 @@
 # Behavior fixtures
 
-Fixtures describe agreed behavior before the engine is implemented. They are not
-yet connected to Vitest. Policies live in [policies.md](../../docs/policies.md).
+Fixtures describe agreed behavior before the engine is implemented. Vitest integration
+is pending. Policies live in [policies.md](../../docs/policies.md).
 
 Each case directory contains:
 
@@ -10,16 +10,15 @@ Each case directory contains:
   CRLFs, or surrounding whitespace.
 - `expected.txt`: exact formatted output for successful cases only.
 
-Payloads use `.txt` so repository JSON formatters do not normalize the very text
-being tested. Preserve the files byte-for-byte. A future loader should read them
-as UTF-8 without trimming or discarding a leading BOM. Successful outputs end in
-one LF. Missing output options mean engine defaults, not repository Oxfmt options.
+Payloads use `.txt` to preserve exact test data through repository formatting. Preserve the files byte-for-byte. A future loader should read them
+as UTF-8 with original whitespace and any leading BOM intact. Successful outputs end in
+one LF. Missing output options select engine defaults. Repository Oxfmt options apply to
+repository formatting.
 
 Outcomes are `formatted`, `neutral`, or `failure`. These metadata values describe
-fixture behavior; they do not prescribe the public API's type names. Failure cases
+fixture behavior independently of the public API's type names. Failure cases
 currently record the expected failure outcome only. Add exact engine-owned error
-kinds and ranges after the diagnostic contract is designed; do not derive them
-from an external parser's message text.
+kinds and ranges using the structured diagnostic contract once it is designed.
 
 ## Initial cases
 
@@ -32,8 +31,8 @@ from an external parser's message text.
 | `trailing-line-comment` | Removing a trailing comma while preserving a same-line comment                |
 | `crlf-input`            | CRLF input becomes LF output                                                  |
 | `leading-bom`           | Leading BOM acceptance and removal                                            |
-| `whitespace-only`       | Neutral outcome without output                                                |
-| `comments-only`         | Failure because no root value exists                                          |
+| `whitespace-only`       | Neutral outcome                                                               |
+| `comments-only`         | Root-value requirement failure                                                |
 | `json-trailing-comma`   | JSON mode rejects a trailing comma accepted in JSONC                          |
 
 ## Cases to settle or add

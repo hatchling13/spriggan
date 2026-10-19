@@ -21,5 +21,5 @@ Run `pnpm nx build @spriggan/ordinare` from the workspace root.
 
 Run `pnpm nx test @spriggan/ordinare` from the workspace root.
 
-The current test covers the scaffold only. The behavior fixtures are not yet wired
-to a test runner.
+The current test covers the scaffold only. Behavior fixture integration
+with a test runner is pending.
