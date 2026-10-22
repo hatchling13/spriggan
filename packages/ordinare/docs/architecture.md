@@ -5,6 +5,18 @@ guide engine implementation. Observable formatting rules live in
 [policies.md](policies.md); concrete examples live in
 [fixtures](../tests/fixtures/README.md).
 
+## Implementation status
+
+Options parsing and error normalization are implemented. The package entry point
+currently exports the `BeautifyOptions` type; the functions and diagnostic models
+remain internal. Source parsing, comment attachment, Doc construction, and printing
+are upcoming stages described by the contracts below.
+
+Option errors are split by responsibility under `src/lib/errors/`: `model.ts`
+defines diagnostic schemas, `collect.ts` locates individual Schema issues,
+`reasons.ts` interprets numeric failure reasons, and `options.ts` maps field paths
+and assembles `InvalidOptionsError`.
+
 ## Parse, don't validate
 
 Convert external values into internal values that carry the guarantees established
@@ -48,9 +60,10 @@ type Beautify = (
 ) => Effect.Effect<Option.Option<string>, BeautifyError>;
 ```
 
-The error names refer to the contracts below. Their constructors and concrete
-representations remain implementation choices. These declarations illustrate the
-API boundary and use the error contracts described below.
+These declarations illustrate the agreed API boundary and use the error contracts
+described below. `InvalidOptionsError` is implemented as a
+`Schema.TaggedError` with a summary message and a non-empty issue list. The complete
+`ParseError` diagnostic representation will be established during source parsing.
 
 | Outcome                                   | Representation                                     |
 | ----------------------------------------- | -------------------------------------------------- |
@@ -66,8 +79,9 @@ and Layer exposure remain implementation choices.
 
 ## Errors and source ranges
 
-`ParseError` contains at least one engine-owned diagnostic. Each diagnostic has an
-engine-owned kind and an original source range. `InvalidOptionsError` contains at
+The source-parsing contract requires `ParseError` to contain at least one
+engine-owned diagnostic. Its current scaffold carries a message. Each planned
+diagnostic has an engine-owned kind and an original source range. `InvalidOptionsError` contains at
 least one issue identifying the offending option and violated rule. Exact kind
 lists, payload types, and ordering for parse diagnostics remain design decisions.
 The option-issue contract is defined below.
@@ -78,10 +92,31 @@ Collect all available option diagnostics across invalid fields. Normalize
 individual diagnostics into engine-owned issues. The current broad
 classifications are:
 
-| Issue kind                | Option fields            |
-| ------------------------- | ------------------------ |
-| `InvalidChoice`           | `mode`, `indentation`    |
-| `ExpectedPositiveInteger` | `printWidth`, `tabWidth` |
+| Issue kind                | Option fields           |
+| ------------------------- | ----------------------- |
+| `InvalidModeChoice`        | `mode`                  |
+| `InvalidIndentationChoice` | `indentation`           |
+| `ExpectedPositiveInteger`  | `printWidth`, `tabWidth` |
+
+Choice reasons contain the expected choices and the supplied `input`. Keeping
+mode and indentation as separate cases preserves the relationship between each
+field and its expected choices.
+
+Numeric reasons form a tagged union:
+
+| Reason              | Detail fields               |
+| ------------------- | --------------------------- |
+| `TypeMismatch`      | `expected: 'number'`, `input` |
+| `IntegerViolation`  | numeric `input`              |
+| `PositiveViolation` | numeric `input`, `boundary`  |
+| `Unclassified`      | `message`, optional `input`  |
+
+Numeric rule classification uses structured filter identifiers. The greater-than
+filter payload is parsed with a Schema before its boundary enters the diagnostic.
+Type mismatches are interpreted in the context of the numeric width options.
+Unclassified diagnostics retain the source issue's formatted explanation and
+include `input` when the source issue reports that property, including an explicit
+`undefined` value.
 
 Interpret each diagnostic path before constructing an issue. The current options
 are flat, so an accepted path contains exactly one of the four field names above.
@@ -91,8 +126,8 @@ violation path.
 Flatten external diagnostic trees into engine-owned issues. The public contract
 consists of each resulting diagnostic's field, violated rule, and explanatory
 detail; external tree structure stays within the normalization boundary. Each
-issue carries its broad classification together with its diagnostic detail. The
-exact detail payload and any additional rule distinctions remain to be designed.
+issue carries its broad classification together with the diagnostic detail
+defined above.
 
 Retain individual diagnostics, including those sharing a field or broad issue
 kind. Preserve their order and count after flattening. The UI may group diagnostics
@@ -100,8 +135,10 @@ in its presentation while retaining the engine result. The engine-owned flat
 diagnostics define the preservation scope. The original `SchemaError` may serve
 as an optional internal debugging cause.
 
-The resulting list contains at least one issue. An empty list follows the mapping
-invariant violation path. Mapping invariant violations enter the defect channel.
+The resulting list contains at least one issue. Internally constructed issues
+retain their types through collection; a non-empty-array guard establishes the
+list invariant. An empty list follows the mapping invariant violation path.
+Mapping invariant violations enter the defect channel.
 
 The normalization operation produces an `InvalidOptionsError` as its successful
 value. The options-parsing boundary then places that value in its typed failure
@@ -127,6 +164,13 @@ rejection of unexpected paths and empty issue lists as defects. Keep these
 contract tests separate from source-formatting fixtures. Assert observable
 outcomes across implementations of the contract.
 
+Current tests cover default resolution, both choice-error kinds, numeric rule
+violations, type mismatches, multiple invalid fields, and multiple diagnostics for
+one field. They compare complete issue arrays to verify structured details, order,
+and count. Dedicated fallback, unexpected-path, and empty-list tests remain
+upcoming verification work. Expected-failure tests use `Effect.flip` before
+execution so unexpected success or a defect fails the test.
+
 ### Source ranges
 
 ```ts
@@ -140,6 +184,10 @@ Ranges satisfy `0 <= start <= end <= source.length` and refer to the same origin
 JavaScript string as the document. A zero-length range can identify an EOF
 position. A leading BOM remains part of this coordinate system even when omitted
 from formatted output. Display line/column numbers may be derived separately.
+
+The current `SourceRangeSchema` establishes non-negative integer endpoints.
+Endpoint ordering and ownership within a source will be established at the
+source-parsing construction boundary.
 
 The diagnostic contract uses engine-owned kinds and original source ranges.
 External parser nodes and diagnostic representations stay inside the adapter.
@@ -176,8 +224,8 @@ BeautifyOptions
 ```
 
 - Require an explicit valid input mode.
-- Apply defaults only to omitted options: two-space indentation, width 100, tab
-  width 2.
+- Apply defaults to omitted options and explicit `undefined` values: two-space
+  indentation, width 100, tab width 2.
 - Route invalid choices and widths to `InvalidOptionsError`, preserving the
   supplied values through validation.
 - Widths are finite positive integers.
@@ -186,8 +234,10 @@ BeautifyOptions
   downstream consumers.
 
 The internal shape has required `mode`, `indentation`, `printWidth`, and `tabWidth`
-fields. Validated widths have a representation that carries their positive-integer
-guarantee; the branding or Schema mechanism is deferred.
+fields. `BeautifyOptionsSchema.Encoded` defines the caller's input type, and
+`BeautifyOptionsSchema.Type` defines `ResolvedOptions`. Decoding defaults resolve
+the optional fields. Widths use `Schema.Int`, a greater-than-zero check, and the
+`PositiveInteger` brand to carry the established guarantee downstream.
 
 ### 2. Source parsing
 
@@ -285,11 +335,9 @@ These identifiers retain their meaning from the policy document.
 ## Deferred implementation choices
 
 - Concrete internal syntax, attachment, and Doc representations.
-- Validated-value constructors, brands, and Schema usage.
-- Error classes and exact parse-diagnostic kinds/payloads and ordering.
-- Option diagnostic detail payloads and any finer rule distinctions. Broad option
-  classifications and preservation of individual flattened diagnostics are
-  specified above.
+- Construction boundaries and validated representations for source syntax,
+  comment attachments, and Doc values.
+- Exact parse-diagnostic kinds, payloads, and ordering.
 - Display-width algorithm, Unicode rules, and supporting library.
 - Parser adapter implementation and comment attachment algorithm.
 - Fixture loader and contract test harness.

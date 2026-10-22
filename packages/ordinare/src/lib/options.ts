@@ -2,7 +2,7 @@ import { Effect, Schema } from 'effect';
 import {
   type InvalidOptionsError,
   mapToInvalidOptionsError,
-} from './errors.ts';
+} from './errors/index.ts';
 
 const PositiveIntegerSchema = Schema.Int.check(Schema.isGreaterThan(0)).pipe(
   Schema.brand('PositiveInteger'),
@@ -36,8 +36,11 @@ export const parseOptions: (
 ) => Effect.Effect<ResolvedOptions, InvalidOptionsError> = (
   options: BeautifyOptions,
 ) =>
-  Schema.decodeEffect(BeautifyOptionsSchema)(options).pipe(
+  Schema.decodeEffect(BeautifyOptionsSchema, {
+    reportInput: true,
+    errors: 'all',
+  })(options).pipe(
     Effect.catch((error) =>
-      Effect.flatMap(mapToInvalidOptionsError(error), Effect.fail),
+      Effect.flatMap(mapToInvalidOptionsError(options, error), Effect.fail),
     ),
   );
