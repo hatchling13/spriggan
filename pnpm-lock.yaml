@@ -73,7 +73,11 @@ importers:
         specifier: 3.0.0-next.35
         version: 3.0.0-next.35(@solidjs/web@2.0.0-rc.13(solid-js@2.0.0-rc.13))(solid-js@2.0.0-rc.13)(supports-color@7.2.0)(vite@8.3.3(@types/node@24.19.1)(jiti@2.4.2)(terser@5.51.2)(yaml@2.9.0))
 
-  packages/ordinare: {}
+  packages/ordinare:
+    dependencies:
+      effect:
+        specifier: ^4.0.1
+        version: 4.0.1
 
 packages:
 

@@ -1,1 +1,1 @@
-export * from './lib/ordinare.ts';
+export * from './lib/index.ts';
