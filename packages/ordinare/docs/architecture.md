@@ -92,10 +92,10 @@ Collect all available option diagnostics across invalid fields. Normalize
 individual diagnostics into engine-owned issues. The current broad
 classifications are:
 
-| Issue kind                | Option fields           |
-| ------------------------- | ----------------------- |
-| `InvalidModeChoice`        | `mode`                  |
-| `InvalidIndentationChoice` | `indentation`           |
+| Issue kind                 | Option fields            |
+| -------------------------- | ------------------------ |
+| `InvalidModeChoice`        | `mode`                   |
+| `InvalidIndentationChoice` | `indentation`            |
 | `ExpectedPositiveInteger`  | `printWidth`, `tabWidth` |
 
 Choice reasons contain the expected choices and the supplied `input`. Keeping
@@ -104,12 +104,12 @@ field and its expected choices.
 
 Numeric reasons form a tagged union:
 
-| Reason              | Detail fields               |
-| ------------------- | --------------------------- |
+| Reason              | Detail fields                 |
+| ------------------- | ----------------------------- |
 | `TypeMismatch`      | `expected: 'number'`, `input` |
-| `IntegerViolation`  | numeric `input`              |
-| `PositiveViolation` | numeric `input`, `boundary`  |
-| `Unclassified`      | `message`, optional `input`  |
+| `IntegerViolation`  | numeric `input`               |
+| `PositiveViolation` | numeric `input`, `boundary`   |
+| `Unclassified`      | `message`, optional `input`   |
 
 Numeric rule classification uses structured filter identifiers. The greater-than
 filter payload is parsed with a Schema before its boundary enters the diagnostic.
