@@ -7,15 +7,34 @@ guide engine implementation. Observable formatting rules live in
 
 ## Implementation status
 
-Options parsing and error normalization are implemented. The package entry point
-currently exports the `BeautifyOptions` type; the functions and diagnostic models
-remain internal. Source parsing, comment attachment, Doc construction, and printing
-are upcoming stages described by the contracts below.
+Options parsing, error normalization, and the source-parsing path are implemented.
+The package entry point currently exports the `BeautifyOptions` type; the
+functions and syntax and diagnostic models remain internal. Comment attachment,
+Doc construction, and printing are upcoming stages described by the contracts
+below.
 
 Option errors are split by responsibility under `src/lib/errors/`: `model.ts`
 defines diagnostic schemas, `collect.ts` locates individual Schema issues,
 `reasons.ts` interprets numeric failure reasons, and `options.ts` maps field paths
 and assembles `InvalidOptionsError`.
+
+The syntax model lives under `src/lib/syntax/`: `range.ts` defines source ranges,
+`node.ts` defines recursive value nodes, `token.ts` defines token kinds and ranges,
+and `document.ts` combines the original source, root, and ordered tokens.
+
+Under `src/lib/parser/`, `parse.ts` handles empty input and the
+`Effect<Option<SyntaxDocument>, ParseError>` boundary. `jsonc.ts` selects JSON or
+JSONC grammar settings, checks parser errors, converts the tree, collects tokens,
+and builds the document. `tokens.ts` isolates scanner-code mapping and lazy token
+iteration. A leading BOM is replaced with one space in the parsing-only view;
+the original source and all UTF-16 offsets remain intact.
+
+Parser tests currently cover scanner-code mapping and BOM behavior, including
+node, key, comment, and token ranges, neutral BOM-only input, U+FEFF inside strings
+and comments, and rejection of repeated or misplaced BOMs. Broader contract tests
+for mode differences, duplicate keys, number and escape spellings, empty input,
+syntax errors, and CRLF coordinates are upcoming verification work. The formatting
+fixtures remain ready for integration as the remaining pipeline stages are built.
 
 ## Parse, don't validate
 
@@ -62,8 +81,8 @@ type Beautify = (
 
 These declarations illustrate the agreed API boundary and use the error contracts
 described below. `InvalidOptionsError` is implemented as a
-`Schema.TaggedError` with a summary message and a non-empty issue list. The complete
-`ParseError` diagnostic representation will be established during source parsing.
+`Schema.TaggedError` with a summary message and a non-empty issue list.
+`ParseError` uses its tag and a summary message for the initial beautifier scope.
 
 | Outcome                                   | Representation                                     |
 | ----------------------------------------- | -------------------------------------------------- |
@@ -79,12 +98,29 @@ and Layer exposure remain implementation choices.
 
 ## Errors and source ranges
 
-The source-parsing contract requires `ParseError` to contain at least one
-engine-owned diagnostic. Its current scaffold carries a message. Each planned
-diagnostic has an engine-owned kind and an original source range. `InvalidOptionsError` contains at
-least one issue identifying the offending option and violated rule. Exact kind
-lists, payload types, and ordering for parse diagnostics remain design decisions.
-The option-issue contract is defined below.
+The initial error contracts support completion of the beautifier pipeline.
+`ParseError` identifies a source-parsing failure through `_tag: 'ParseError'` and
+an explanatory `message`. `InvalidOptionsError` contains at least one issue
+identifying the offending option and violated rule. The option-issue contract is
+defined below.
+
+### Parse failures
+
+The parsing boundary returns a complete valid document, the neutral empty-input
+outcome, or a typed `ParseError`. Any parser-reported syntax error produces
+`ParseError`, including when the parser also produces a recovered tree. Formatting
+continues only with successfully parsed documents.
+
+The adapter interprets parser diagnostics and produces a summary message. Parser
+codes, diagnostic collections, and recovery representations stay within that
+boundary. Source-parsing tests assert the typed failure outcome and `ParseError`
+tag; messages provide explanatory context.
+
+Detailed parse diagnostics are a future extension driven by consumer needs.
+Possible additions include source ranges, classified reasons, and multiple
+diagnostics. Their payloads and collection policies can be designed at that stage
+while retaining the parser adapter boundary. Original-source ranges in successful
+documents support accurate formatting and retain their existing contract.
 
 ### Option error collection and normalization
 
@@ -189,7 +225,8 @@ The current `SourceRangeSchema` establishes non-negative integer endpoints.
 Endpoint ordering and ownership within a source will be established at the
 source-parsing construction boundary.
 
-The diagnostic contract uses engine-owned kinds and original source ranges.
+These source ranges support token preservation and layout in successfully parsed
+documents. Future diagnostic ranges can use the same coordinate convention.
 External parser nodes and diagnostic representations stay inside the adapter.
 Malformed user input enters the typed failure channel; implementation bugs enter
 the defect channel.
@@ -256,9 +293,70 @@ Original source + InputMode
 - Ensure all source ranges are valid and refer to this document's original source.
 - Record comment locations for attachment in the next stage.
 
-Initially use Microsoft's `jsonc-parser` behind an adapter. Convert its types,
-diagnostics, options, and coordinates at that boundary. Preserve source-token
-spellings for output through their original source ranges.
+Initially use Microsoft's `jsonc-parser` behind an adapter. Convert its syntax
+types, options, and coordinates at that boundary, and interpret parser diagnostics
+as the `ParseError` outcome described above. Preserve source-token spellings for
+output through their original source ranges.
+
+#### Syntax document
+
+`SyntaxDocument` owns the original source string, a node tree with exactly one
+root value, and a document-wide token list. Preserve the original source exactly,
+including a leading BOM and CRLF line endings. Empty or permitted-whitespace-only
+input follows the `Option.none()` outcome at the parsing boundary.
+
+The tree expresses value relationships:
+
+- Objects contain an ordered list of members, preserving duplicate keys.
+- Each member contains a string key and a value.
+- Arrays contain an ordered list of values.
+- Scalar nodes distinguish strings, numbers, booleans, and null, and retain their
+  original source ranges.
+
+Original token spellings remain available through source ranges. Numeric nodes
+can represent their source tokens independently of JavaScript numeric conversion.
+
+#### Node and token ranges
+
+All ranges use UTF-16 code units in the same original source, with an inclusive
+start and exclusive end. A value node spans the value itself. Object and array
+ranges include their opening and closing delimiters. Surrounding whitespace,
+comments, and a following comma are represented by the document's token list and
+the source gaps between tokens.
+
+The token list covers the whole document in source order, including value tokens,
+comments, and punctuation such as braces, brackets, colons, and commas. Leading,
+trailing, and container-internal comments retain their own ranges. The leading
+BOM remains in the original source. The adapter replaces a single U+FEFF at offset
+zero with one U+0020 space in a parsing-only view. Both `parseTree` and the scanner
+consume that same view. Its UTF-16 length and line endings match the original, so
+node, key, comment, and token ranges refer directly to the original source.
+`SyntaxDocument.original` retains the caller's exact input. The replacement space
+is omitted from the token list as layout whitespace.
+
+Only the first character receives this treatment. Additional or misplaced BOMs
+remain subject to the selected grammar, and U+FEFF within strings and comments
+retains its original spelling. The empty-input check permits one leading BOM and
+otherwise accepts only JSON whitespace: space, tab, CR, and LF.
+
+The tree and token list are related through their original source ranges. Shared
+token objects or token indices on nodes can be introduced when a concrete
+consumer requires them. Comment attachment targets are established in the next
+stage.
+
+#### Whitespace and blank lines
+
+The original source and token ranges are the authoritative representation of
+whitespace. Derive layout whitespace and blank lines from source gaps between
+adjacent tokens, including comments and punctuation, and from the document
+boundary gaps. The syntax document stores the information needed for this
+derivation through its source and ranges.
+
+Treat CRLF as one line break while retaining the original source coordinates.
+Line breaks within a comment belong to that comment's range; gaps around the
+comment determine surrounding layout whitespace. Blank-line counts are derived
+when needed. A future cache may store those derived results while keeping the
+original source and ranges authoritative.
 
 ### 3. Comment attachment
 
@@ -334,10 +432,12 @@ These identifiers retain their meaning from the policy document.
 
 ## Deferred implementation choices
 
-- Concrete internal syntax, attachment, and Doc representations.
+- Exact syntax type declarations, attachment identities, and Doc representations,
+  following the document, node, and token contracts above.
 - Construction boundaries and validated representations for source syntax,
   comment attachments, and Doc values.
-- Exact parse-diagnostic kinds, payloads, and ordering.
+- Detailed parse diagnostics as a future extension: kinds, ranges, payloads, and
+  collection policies, when a consumer requires them.
 - Display-width algorithm, Unicode rules, and supporting library.
 - Parser adapter implementation and comment attachment algorithm.
 - Fixture loader and contract test harness.

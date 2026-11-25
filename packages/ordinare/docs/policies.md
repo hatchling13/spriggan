@@ -22,9 +22,9 @@ a recovered tree.
 | INPUT-004 | A comments-only document fails the root-value requirement. JSON mode accepts the standard JSON grammar; JSONC additionally accepts comments.                             |
 | INPUT-005 | JSON rejects trailing commas. JSONC accepts them. Formatting removes trailing commas as a fixed output policy.                                                           |
 | INPUT-006 | Accept one U+FEFF BOM at the very beginning and omit it from output. Preserve U+FEFF inside strings and comments.                                                        |
-| INPUT-007 | Accept LF and CRLF line endings. Use the original input unchanged for parsing, diagnostics, and source ranges. BOM handling must preserve original offsets.              |
+| INPUT-007 | Accept LF and CRLF line endings. Preserve the original input and its source coordinates. The adapter may replace the leading BOM with one space in a parsing-only view, preserving string length and all offsets. |
 | ERROR-001 | Invalid input returns the failure outcome. The UI keeps the user's input.                                                                                                |
-| ERROR-002 | Normalize parser diagnostics into engine-owned error kinds and original source ranges. Keep external error representations within the adapter boundary.                  |
+| ERROR-002 | Report source-parsing failure as a tagged `ParseError` with a summary message. Keep parser-specific diagnostics within the adapter boundary; detailed diagnostics remain a future extension. |
 | ERROR-003 | Invalid input is an expected failure. Implementation bugs and violated internal invariants are distinct from input errors. Empty input follows the neutral success path. |
 
 ## Preservation
@@ -83,7 +83,7 @@ are retained there.
 | VERIFY-001 | Successful output parses under the selected mode.                                                                                                                                          |
 | VERIFY-002 | Formatting successful output again with the same mode and options produces exactly the same output.                                                                                        |
 | VERIFY-003 | Non-whitespace token spellings and order remain unchanged, except for the changes explicitly permitted by PRESERVE-006. Comments occur exactly once.                                       |
-| VERIFY-004 | Error fixtures compare engine-owned error kinds and original source ranges. Base assertions on structured diagnostic data; retain messages and stack traces for explanation and debugging. |
+| VERIFY-004 | Source-error fixtures assert the typed `ParseError` failure outcome. Option-error tests compare structured issues. Messages and stack traces provide explanatory and debugging context. |
 
 Executable examples live in `tests/fixtures/`; policy IDs connect their payloads
 to this document. Fixtures are the single source of truth

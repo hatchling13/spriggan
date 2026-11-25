@@ -17,8 +17,10 @@ repository formatting.
 
 Outcomes are `formatted`, `neutral`, or `failure`. These metadata values describe
 fixture behavior independently of the public API's type names. Failure cases
-currently record the expected failure outcome only. Add exact engine-owned error
-kinds and ranges using the structured diagnostic contract once it is designed.
+record the expected failure outcome. The initial harness will verify that these
+cases produce a typed `ParseError`. Summary messages provide explanatory context;
+detailed parse diagnostics can be added as a future extension when a consumer
+needs them.
 
 ## Initial cases
 
@@ -46,7 +48,6 @@ kinds and ranges using the structured diagnostic contract once it is designed.
 - Negative zero, exponent spellings, and additional string escapes.
 - Empty input, multiple root values, incomplete syntax, and unexpected trailing text.
 - The same input in JSON and JSONC modes, and U+FEFF inside strings/comments.
-- Exact diagnostic kinds and ranges once the error contract is designed.
 
 For each successful case, the future harness should also check reparsing,
 idempotence, and preservation. Run the same contract cases against any replacement
