@@ -1,5 +1,6 @@
 import { Effect, Option } from 'effect';
 import { buildDoc } from './build-doc.ts';
+import { attachComments } from './comments.ts';
 import type { BeautifyError } from './errors/model.ts';
 import { parseOptions, type BeautifyOptions } from './options.ts';
 import { parseJSON } from './parser/parse.ts';
@@ -13,7 +14,12 @@ export const beautify = (
     const resolved = yield* parseOptions(options);
     const document = yield* parseJSON(source, resolved.mode);
 
-    return Option.map(document, (document) =>
-      printDoc(buildDoc(document), resolved),
-    );
+    if (Option.isNone(document)) {
+      return Option.none<string>();
+    }
+
+    const attachments = yield* attachComments(document.value);
+    const doc = buildDoc(document.value, attachments);
+
+    return Option.some(printDoc(doc, resolved));
   });

@@ -20,9 +20,7 @@ describe('parseJSON BOM handling', () => {
                 value: {
                   _tag: 'Array',
                   range: { start: 6, end: 9 },
-                  elements: [
-                    { _tag: 'Number', range: { start: 7, end: 8 } },
-                  ],
+                  elements: [{ _tag: 'Number', range: { start: 7, end: 8 } }],
                 },
               },
             ],

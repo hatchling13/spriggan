@@ -7,17 +7,27 @@ guide engine implementation. Observable formatting rules live in
 
 ## Implementation status
 
-Options parsing, error normalization, source parsing, and a basic Doc/printer
-pipeline are implemented. The package entry point exports `beautify` and the
+Options parsing, error normalization, source parsing, comment attachment, and a
+basic Doc/printer pipeline are implemented. The package entry point exports `beautify` and the
 `BeautifyOptions` and `BeautifyError` types. Internal stage functions and syntax
 models remain within the package. The current output supports basic indentation
-and a final LF. Comment attachment, blank-line preservation, and width-dependent
-layout are upcoming stages described by the contracts below.
+and a final LF, preserving JSONC comments through their attachments. Blank-line
+preservation and width-dependent layout are upcoming stages described by the
+contracts below.
 
 `apps/web` consumes this entry point through a workspace dependency. Its minimal
 screen supports JSON/JSONC mode, indentation, explicit execution, output, and
-summary errors. The screen identifies the prototype's current comment omission
-and remaining layout work.
+summary errors. The screen identifies comment preservation as supported and
+blank-line preservation and width-dependent layout as remaining work.
+
+`comments.ts` collects neighboring-token and line information, finds the innermost
+container, and attaches each comment to a document boundary, node, or container.
+`beautify` passes the original syntax document and attachment list to `buildDoc`.
+Leading, trailing, dangling, and document comments retain their source spelling
+with actual CRLF line endings normalized to LF. Separator-aware emission keeps
+comments on their original side of retained commas and colons; a line comment
+receives a line break before a following separator. Public-output tests verify
+these cases and idempotence, including consecutive and nested comments.
 
 Option errors are split by responsibility under `src/lib/errors/`: `model.ts`
 defines diagnostic schemas, `collect.ts` locates individual Schema issues,
@@ -370,8 +380,11 @@ original source and ranges authoritative.
 SyntaxDocument -> CommentedDocument
 ```
 
-This pure stage retains the syntax document and adds attachment information,
-preserving the source, tree, and comment text unchanged.
+This stage retains the syntax document and adds attachment information,
+preserving the source, tree, and comment text unchanged. The current representation
+uses a separate readonly attachment list referring to nodes in that document.
+The computation is exposed as an Effect whose defect channel reports internal
+invariant violations.
 
 | Relationship | Meaning                                                             |
 | ------------ | ------------------------------------------------------------------- |
@@ -384,10 +397,13 @@ Every comment has exactly one attachment; its target exists in the same document
 Preserve original ranges, order, and relevant blank-line information. Empty
 containers can contain comments, and comment attachments survive comma removal.
 
-Concrete target identities, relationship type names, and the attachment algorithm
-are deferred. Ambiguous examples are settled with Oxfmt reference fixtures.
-Failure to process a valid document is an internal invariant violation handled as
-a defect.
+Node targets currently use references into the original syntax tree, while
+document targets identify the before-root or after-root side. Empty containers
+receive dangling comments. Object-member leading comments target the key, and
+trailing comments target the value; comments around a colon target the key or
+value according to their side of the separator. Ambiguous examples are settled
+with Oxfmt reference fixtures. Failure to process a valid document is an internal
+invariant violation handled as a defect.
 
 ### 4. Doc construction
 
@@ -438,14 +454,13 @@ These identifiers retain their meaning from the policy document.
 
 ## Deferred implementation choices
 
-- Exact syntax type declarations, attachment identities, and Doc representations,
-  following the document, node, and token contracts above.
+- Doc extensions for width-dependent layout and blank-line preservation.
 - Construction boundaries and validated representations for source syntax,
   comment attachments, and Doc values.
 - Detailed parse diagnostics as a future extension: kinds, ranges, payloads, and
   collection policies, when a consumer requires them.
 - Display-width algorithm, Unicode rules, and supporting library.
-- Parser adapter implementation and comment attachment algorithm.
+- Additional parser and comment-placement reference cases.
 - Fixture loader and contract test harness.
 
 Choose these while implementing the contracts. Keep observable decisions in

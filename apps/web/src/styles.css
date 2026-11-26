@@ -39,6 +39,7 @@ button:disabled {
   opacity: 0.6;
 }
 
+a:focus-visible,
 button:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
@@ -64,6 +65,53 @@ h1 {
 
 .page-header p {
   color: #52675d;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  color: #236447;
+  text-underline-offset: 0.2em;
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 24rem));
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tool-card {
+  display: block;
+  height: 100%;
+  border: 1px solid #bccbc2;
+  border-radius: 0.65rem;
+  padding: 1.5rem;
+  background: white;
+  color: inherit;
+  text-decoration: none;
+}
+
+.tool-card:hover {
+  border-color: #236447;
+  background: #edf2ee;
+}
+
+.tool-card h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.tool-card p {
+  color: #52675d;
+  line-height: 1.6;
+}
+
+.tool-card span {
+  color: #236447;
+  font-weight: 600;
 }
 
 fieldset {

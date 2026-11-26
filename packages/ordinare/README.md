@@ -4,9 +4,9 @@ JSON and JSONC beautifier engine for Spriggan. The package currently implements
 options parsing, default resolution, branded positive-integer widths, structured
 option diagnostics, and JSON/JSONC source parsing. Parsed documents retain the
 original source, a recursive node tree, and ordered tokens with UTF-16 source
-ranges. A basic Doc/printer pipeline produces indented output with a final LF.
-Comment attachment, blank-line preservation, and width-dependent layout are
-upcoming stages.
+ranges. Comment attachment feeds a basic Doc/printer pipeline that preserves JSONC
+comments and produces indented output with a final LF. Blank-line preservation
+and width-dependent layout are upcoming stages.
 
 The engine is intended to work independently of the web UI. Internal consumers
 use the `@spriggan/source` export condition; external consumers use the built
@@ -15,8 +15,11 @@ JavaScript and declarations in `dist`.
 The package entry point exports `beautify` and the `BeautifyOptions` and
 `BeautifyError` types. Internal stages remain within the package. `apps/web`
 provides a minimal screen for input, JSON/JSONC mode, indentation, output, and
-summary errors. The prototype currently emits output with comments omitted;
-comment preservation is upcoming work.
+summary errors. The current release scope includes basic formatting and JSONC
+comment preservation.
+
+Cloudflare Pages build settings and the initial deployment steps are documented
+in the [web deployment guide](../../apps/web/README.md).
 
 ## Design
 
@@ -42,8 +45,11 @@ token coordinates, U+FEFF preservation in strings and comments, BOM-only neutral
 input, and rejection of repeated or misplaced BOMs.
 
 Pipeline tests cover nested output, neutral input, syntax failures, and option
-validation before empty-input handling. Web tests cover execution, selected mode
-and indentation, empty input, and parsing-error presentation.
+validation before empty-input handling. Comment cases cover document, leading,
+trailing, and dangling placement, colon and comma boundaries, consecutive and
+nested comments, block-comment CRLF normalization, and idempotence. Web tests cover
+execution, selected mode and indentation, empty input, parsing-error presentation,
+and JSONC comment preservation.
 
 Upcoming verification work includes option fallback diagnostics and mapping
 defects, plus broader parsing contracts for mode differences, duplicate keys,
