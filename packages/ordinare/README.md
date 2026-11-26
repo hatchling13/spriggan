@@ -4,15 +4,19 @@ JSON and JSONC beautifier engine for Spriggan. The package currently implements
 options parsing, default resolution, branded positive-integer widths, structured
 option diagnostics, and JSON/JSONC source parsing. Parsed documents retain the
 original source, a recursive node tree, and ordered tokens with UTF-16 source
-ranges. Comment attachment, Doc construction, and printing are upcoming stages.
+ranges. A basic Doc/printer pipeline produces indented output with a final LF.
+Comment attachment, blank-line preservation, and width-dependent layout are
+upcoming stages.
 
 The engine is intended to work independently of the web UI. Internal consumers
 use the `@spriggan/source` export condition; external consumers use the built
 JavaScript and declarations in `dist`.
 
-The current package entry point exports the `BeautifyOptions` type. Options
-parsing, error normalization, and source parsing remain internal while the engine
-is developed.
+The package entry point exports `beautify` and the `BeautifyOptions` and
+`BeautifyError` types. Internal stages remain within the package. `apps/web`
+provides a minimal screen for input, JSON/JSONC mode, indentation, output, and
+summary errors. The prototype currently emits output with comments omitted;
+comment preservation is upcoming work.
 
 ## Design
 
@@ -36,6 +40,10 @@ count.
 Parser tests cover scanner-code mapping, leading BOM handling, original node and
 token coordinates, U+FEFF preservation in strings and comments, BOM-only neutral
 input, and rejection of repeated or misplaced BOMs.
+
+Pipeline tests cover nested output, neutral input, syntax failures, and option
+validation before empty-input handling. Web tests cover execution, selected mode
+and indentation, empty input, and parsing-error presentation.
 
 Upcoming verification work includes option fallback diagnostics and mapping
 defects, plus broader parsing contracts for mode differences, duplicate keys,

@@ -7,11 +7,17 @@ guide engine implementation. Observable formatting rules live in
 
 ## Implementation status
 
-Options parsing, error normalization, and the source-parsing path are implemented.
-The package entry point currently exports the `BeautifyOptions` type; the
-functions and syntax and diagnostic models remain internal. Comment attachment,
-Doc construction, and printing are upcoming stages described by the contracts
-below.
+Options parsing, error normalization, source parsing, and a basic Doc/printer
+pipeline are implemented. The package entry point exports `beautify` and the
+`BeautifyOptions` and `BeautifyError` types. Internal stage functions and syntax
+models remain within the package. The current output supports basic indentation
+and a final LF. Comment attachment, blank-line preservation, and width-dependent
+layout are upcoming stages described by the contracts below.
+
+`apps/web` consumes this entry point through a workspace dependency. Its minimal
+screen supports JSON/JSONC mode, indentation, explicit execution, output, and
+summary errors. The screen identifies the prototype's current comment omission
+and remaining layout work.
 
 Option errors are split by responsibility under `src/lib/errors/`: `model.ts`
 defines diagnostic schemas, `collect.ts` locates individual Schema issues,

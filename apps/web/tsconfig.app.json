@@ -27,5 +27,10 @@
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx"
   ],
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "references": [
+    {
+      "path": "../../packages/ordinare/tsconfig.lib.json"
+    }
+  ]
 }
