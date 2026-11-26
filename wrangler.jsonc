@@ -1,5 +1,8 @@
 {
   "name": "spriggan",
-  "pages_build_output_dir": "./apps/web/dist",
   "compatibility_date": "2026-11-26",
+  "assets": {
+    "directory": "./apps/web/dist",
+    "not_found_handling": "single-page-application",
+  },
 }

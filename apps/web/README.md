@@ -25,18 +25,17 @@ pnpm nx run-many -p web @spriggan/ordinare -t lint test typecheck build
 
 The production site is generated in `apps/web/dist`.
 
-## Cloudflare Pages
+## Cloudflare deployment
 
-Create a Pages project with Git integration and the following settings:
+Connect the repository to Workers Builds with the following settings:
 
-| Setting                | Value                                                 |
-| ---------------------- | ----------------------------------------------------- |
-| Project name           | `spriggan`                                            |
-| Production branch      | `main`                                                |
-| Framework preset       | None                                                  |
-| Root directory         | Repository root                                       |
-| Build command          | `pnpm install --frozen-lockfile && pnpm nx build web` |
-| Build output directory | `apps/web/dist`                                       |
+| Setting           | Value                                                 |
+| ----------------- | ----------------------------------------------------- |
+| Project name      | `spriggan`                                            |
+| Production branch | `main`                                                |
+| Root directory    | Repository root                                       |
+| Build command     | `pnpm install --frozen-lockfile && pnpm nx build web` |
+| Deploy command    | `npx wrangler deploy`                                 |
 
 Set these build environment variables for both production and preview:
 
@@ -49,22 +48,22 @@ Set these build environment variables for both production and preview:
 The explicit install step uses the committed lockfile. The pnpm version matches
 the root `packageManager` field. Cloudflare's build image supports these version
 overrides and skipping automatic installation; see the
-[build image documentation](https://developers.cloudflare.com/pages/configuration/build-image/).
-The monorepo root allows Nx and pnpm to resolve the ordinare workspace dependency;
-see [build configuration](https://developers.cloudflare.com/pages/configuration/build-configuration/).
+[build image documentation](https://developers.cloudflare.com/workers/ci-cd/builds/build-image/).
+The monorepo root allows Nx and pnpm to resolve the ordinare workspace dependency.
 
-Cloudflare Pages serves the application through its default SPA fallback. Keep the
-build output free of a top-level `404.html` so direct tool URLs resolve to
-`index.html`; see [serving pages](https://developers.cloudflare.com/pages/configuration/serving-pages/).
+The root `wrangler.jsonc` explicitly sets `assets.directory` to `apps/web/dist`.
+Wrangler deploys the existing build output as static assets. The
+`assets.not_found_handling` setting enables SPA fallback, so navigation directly to
+`/ordinare` serves `index.html`; see
+[SPA configuration](https://developers.cloudflare.com/workers/static-assets/routing/single-page-application/).
 
-The root `wrangler.jsonc` records the Pages project name, output directory, and
-compatibility date using the
-[Pages configuration format](https://developers.cloudflare.com/pages/functions/wrangler-configuration/).
-Keep its name aligned with the Pages project created in the dashboard.
+Keep the Wrangler `name` aligned with the Worker created in the dashboard.
+The explicit asset configuration identifies the deployable output within the
+workspace, avoiding framework auto-configuration at the repository root.
 
 Review a preview deployment from the feature branch before merging to `main`.
 Check the home page, navigation to ordinare, direct loading and refreshing of
 `/ordinare`, and the return link. Check JSON formatting, JSONC comments, indentation,
 empty input, and syntax errors.
-Connect the intended custom domain through the Pages project's Custom domains
-settings after the site is deployed.
+Connect the intended custom domain through the Worker's domain settings after the
+site is deployed.
