@@ -33,6 +33,8 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typings
+.pnpm-store
+/.wrangler
 
 # System Files
 .DS_Store

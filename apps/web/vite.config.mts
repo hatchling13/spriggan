@@ -1,5 +1,5 @@
 /// <reference types='vitest' />
-import { defineConfig } from 'vite';
+import { defaultClientConditions, defineConfig } from 'vite';
 import solid from '@solidjs/vite-plugin';
 
 export default defineConfig(() => ({
@@ -14,6 +14,9 @@ export default defineConfig(() => ({
     host: 'localhost',
   },
   plugins: [solid()],
+  resolve: {
+    conditions: ['@spriggan/source', ...defaultClientConditions],
+  },
   build: {
     outDir: './dist',
     emptyOutDir: true,

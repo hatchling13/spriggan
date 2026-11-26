@@ -26,11 +26,6 @@ export const BeautifyOptionsSchema = Schema.Struct({
 export type BeautifyOptions = typeof BeautifyOptionsSchema.Encoded;
 export type ResolvedOptions = typeof BeautifyOptionsSchema.Type;
 
-export const SourceRangeSchema = Schema.Struct({
-  start: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
-  end: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
-});
-
 export const parseOptions: (
   options: BeautifyOptions,
 ) => Effect.Effect<ResolvedOptions, InvalidOptionsError> = (

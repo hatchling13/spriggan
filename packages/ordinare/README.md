@@ -1,15 +1,25 @@
 # ordinare
 
 JSON and JSONC beautifier engine for Spriggan. The package currently implements
-options parsing, default resolution, branded positive-integer widths, and
-structured option diagnostics. Source parsing and formatting are upcoming stages.
+options parsing, default resolution, branded positive-integer widths, structured
+option diagnostics, and JSON/JSONC source parsing. Parsed documents retain the
+original source, a recursive node tree, and ordered tokens with UTF-16 source
+ranges. Comment attachment feeds a basic Doc/printer pipeline that preserves JSONC
+comments and produces indented output with a final LF. Blank-line preservation
+and width-dependent layout are upcoming stages.
 
 The engine is intended to work independently of the web UI. Internal consumers
 use the `@spriggan/source` export condition; external consumers use the built
 JavaScript and declarations in `dist`.
 
-The current package entry point exports the `BeautifyOptions` type. Options
-parsing and error normalization remain internal while the engine is developed.
+The package entry point exports `beautify` and the `BeautifyOptions` and
+`BeautifyError` types. Internal stages remain within the package. `apps/web`
+provides a minimal screen for input, JSON/JSONC mode, indentation, output, and
+summary errors. The current release scope includes basic formatting and JSONC
+comment preservation.
+
+Cloudflare Pages build settings and the initial deployment steps are documented
+in the [web deployment guide](../../apps/web/README.md).
 
 ## Design
 
@@ -30,6 +40,19 @@ type mismatches, and preservation of multiple diagnostics across fields and with
 a single field. They compare structured diagnostics, including their order and
 count.
 
-Fallback diagnostics and mapping-defect tests are upcoming verification work.
+Parser tests cover scanner-code mapping, leading BOM handling, original node and
+token coordinates, U+FEFF preservation in strings and comments, BOM-only neutral
+input, and rejection of repeated or misplaced BOMs.
+
+Pipeline tests cover nested output, neutral input, syntax failures, and option
+validation before empty-input handling. Comment cases cover document, leading,
+trailing, and dangling placement, colon and comma boundaries, consecutive and
+nested comments, block-comment CRLF normalization, and idempotence. Web tests cover
+execution, selected mode and indentation, empty input, parsing-error presentation,
+and JSONC comment preservation.
+
+Upcoming verification work includes option fallback diagnostics and mapping
+defects, plus broader parsing contracts for mode differences, duplicate keys,
+number and escape spellings, empty input, syntax errors, and CRLF ranges.
 Source-formatting fixtures are recorded in `tests/fixtures/`; integration with a
 test runner follows implementation of the formatting pipeline.
